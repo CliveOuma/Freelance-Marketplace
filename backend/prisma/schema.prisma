@@ -1,0 +1,115 @@
+// prisma/schema.prisma
+//Defines normalized relational DB for scalable marketplace
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  EMPLOYER
+  WRITER
+}
+
+enum JobStatus {
+  OPEN
+  UNDER_REVIEW
+  COMPLETED
+}
+
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  username    String   @unique
+  phoneNumber String?
+  password    String
+  firstName   String
+  lastName    String
+  role        Role     @default(WRITER)
+  bio         String?
+  skills      String[]
+  rating      Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  proposals   Proposal[]
+  submissions Submission[]
+  jobs        Job[]     @relation("EmployerJobs")
+  reviews     Review[]  // added to complete the inverse side of Review.writer
+
+  @@index([role])
+}
+
+model Job {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  category    String
+  budget      Float
+  deadline    DateTime
+  status      JobStatus @default(OPEN)
+
+  employerId  String
+  employer    User @relation("EmployerJobs", fields: [employerId], references: [id])
+
+  proposals   Proposal[]
+  submissions Submission[] // added to complete the inverse side of Submission.job
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+  @@index([category])
+}
+
+model Proposal {
+  id            String   @id @default(uuid())
+  proposedPrice Float
+  deliveryTime  Int
+  coverLetter   String
+  status        ProposalStatus @default(PENDING)
+
+  jobId   String
+  job     Job @relation(fields: [jobId], references: [id])
+
+  writerId String
+  writer   User @relation(fields: [writerId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([jobId, writerId]) // Prevent duplicate bids
+}
+
+model Submission {
+  id        String   @id @default(uuid())
+  filePath  String
+  notes     String?
+
+  jobId   String
+  job     Job @relation(fields: [jobId], references: [id])
+
+  writerId String
+  writer   User @relation(fields: [writerId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+
+  writerId String
+  writer   User @relation(fields: [writerId], references: [id])
+
+  createdAt DateTime @default(now())
+}
