@@ -8,13 +8,23 @@ import { join } from 'path';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
+
+  //Enable CORS for frontend
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'https://yourdomain.com',
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, transform: true }),
   );
 
   app.setGlobalPrefix('api');
 
-  // Ensure upload directory exists for writer submission files
   const uploadDir = join(process.cwd(), 'uploads', 'submissions');
   if (!existsSync(uploadDir)) {
     mkdirSync(uploadDir, { recursive: true });
@@ -32,5 +42,4 @@ async function bootstrap() {
     process.exit(1);
   }
 }
-
 bootstrap();
