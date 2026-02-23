@@ -1,19 +1,23 @@
-
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { ProfileModule } from './modules/profile/profile.module';
+import { UsersModule } from './modules/users/users.module';
+import { JobsModule } from './modules/jobs/jobs.module';
+import { SubmissionsModule } from './modules/submissions/submissions.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
-    // Registers POST /auth/register and POST /auth/login endpoints.
     AuthModule,
+    ProfileModule,
+    UsersModule,
+    JobsModule,
+    SubmissionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
