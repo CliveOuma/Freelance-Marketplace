@@ -89,10 +89,10 @@ const Login = () => {
       console.log('Login successful:', data);
 
       // Example: save token if your backend returns one
-      // if (data.token) {
-      //   localStorage.setItem('authToken', data.token);
+      if (data.token) {
+       localStorage.setItem('authToken', data.token);
       //   // redirect or update app state
-      // }
+      }
 
       // For now just show success
       setServerError('Login successful!');
