@@ -5,29 +5,32 @@ import React, { useState } from 'react';
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
-    userPassword: '',
+    password: '',
   });
 
   const [errors, setErrors] = useState({
     email: '',
-    userPassword: '',
+    password: '',
   });
+
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear error as soon as user starts typing
     if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
+    // Also clear server error when user starts typing again
+    setServerError(null);
   };
 
   const validateForm = () => {
     let isValid = true;
     const newErrors = { ...errors };
 
-    // Email
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
       isValid = false;
@@ -36,12 +39,11 @@ const Login = () => {
       isValid = false;
     }
 
-    // Password
-    if (!formData.userPassword) {
-      newErrors.userPassword = 'Password is required';
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
       isValid = false;
-    } else if (formData.userPassword.length < 6) {
-      newErrors.userPassword = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
       isValid = false;
     }
 
@@ -51,22 +53,55 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setServerError(null);
 
-    if (validateForm()) {
-      // Replace with your actual login API call
-      try {
-        console.log('Login attempt with:', formData);
-        // Example:
-        // const res = await fetch('/api/login', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(formData),
-        // });
-        // if (res.ok) { redirect or set session }
-      } catch (err) {
-        console.error('Login error:', err);
-        // You can set a general form error here if needed
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+
+    try {
+      console.log('Login attempt with:', formData);
+
+      const res = await fetch('http://localhost:8080/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      console.log('Response status:', res.status);
+      console.log('Response status text:', res.statusText);
+
+      if (!res.ok) {
+        // Try to get the error message from backend
+        const errorData = await res.text().catch(() => 'No response body');
+        console.error('Server error response:', errorData);
+        setServerError(errorData || `Login failed (${res.status} ${res.statusText})`);
+        return;
       }
+
+      // If success
+      const data = await res.json();
+      console.log('Login successful:', data);
+
+      // Example: save token if your backend returns one
+      if (data.token) {
+       localStorage.setItem('authToken', data.token);
+      //   // redirect or update app state
+      }
+
+      // For now just show success
+      setServerError('Login successful!');
+
+    } catch (err) {
+      console.error('Fetch/login error:', err);
+      setServerError('Network error - could not connect to server');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -97,6 +132,7 @@ const Login = () => {
                 placeholder="Email Address"
                 value={formData.email}
                 onChange={handleChange}
+                disabled={isSubmitting}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
               {errors.email && (
@@ -107,23 +143,40 @@ const Login = () => {
             <div>
               <input
                 type="password"
-                name="userPassword"
+                name="password"
                 placeholder="Password"
-                value={formData.userPassword}
+                value={formData.password}
                 onChange={handleChange}
+                disabled={isSubmitting}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
-              {errors.userPassword && (
-                <p className="mt-1.5 text-red-600 text-sm">{errors.userPassword}</p>
+              {errors.password && (
+                <p className="mt-1.5 text-red-600 text-sm">{errors.password}</p>
               )}
             </div>
           </div>
 
+          {/* Server error or success message */}
+          {serverError && (
+            <div className={`mt-4 p-3 rounded text-center text-sm ${
+              serverError.includes('successful') 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-red-100 text-red-800'
+            }`}>
+              {serverError}
+            </div>
+          )}
+
           <button
             type="submit"
-            className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3.5 rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+            disabled={isSubmitting}
+            className={`
+              mt-6 w-full 
+              ${isSubmitting ? 'bg-blue-400 cursor-wait' : 'bg-blue-600 hover:bg-blue-800'} 
+              text-white font-medium py-3.5 rounded-lg transition duration-200 shadow-md hover:shadow-lg
+            `}
           >
-            Login
+            {isSubmitting ? 'Logging in...' : 'Login'}
           </button>
 
           <div className="mt-6 text-center space-y-3">

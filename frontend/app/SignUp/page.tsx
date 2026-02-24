@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 
 const Page = () => {
   const [formData, setFormData] = useState({
@@ -9,8 +10,8 @@ const Page = () => {
     userName: '',
     email: '',
     phoneNumber: '',
-    userPassword: '',
-    confirmedPassword: '',
+    password: '',
+  //  confirmedPassword: '',
   });
 
   const [errors, setErrors] = useState({
@@ -19,8 +20,8 @@ const Page = () => {
     userName: '',
     email: '',
     phoneNumber: '',
-    userPassword: '',
-    confirmedPassword: '',
+    password: '',
+  
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,33 +73,83 @@ const Page = () => {
       isValid = false;
     }
 
-    if (!formData.userPassword) {
-      newErrors.userPassword = 'Password is required';
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
       isValid = false;
-    } else if (formData.userPassword.length < 6) {
-      newErrors.userPassword = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
       isValid = false;
     }
 
-    if (!formData.confirmedPassword) {
+   /* if (!formData.confirmedPassword) {
       newErrors.confirmedPassword = 'Please confirm password';
       isValid = false;
     } else if (formData.confirmedPassword !== formData.userPassword) {
       newErrors.confirmedPassword = 'Passwords do not match';
       isValid = false;
-    }
+    }*/
 
     setErrors(newErrors);
     return isValid;
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (validateForm()) {
-      console.log('Form is valid → submitting:', formData);
-      // await fetch('/api/register', { method: 'POST', body: JSON.stringify(formData) })
+ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  if (!validateForm()) {
+    toast.error("Please fix the form errors");
+    return;
+  }
+
+  try {
+    console.log("Submitting data:", formData);
+
+    const response = await fetch(
+      "http://localhost:8080/api/auth/register",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          username: formData.userName, // make sure backend expects "username"
+          email: formData.email,
+          password: formData.password,
+          phoneNumber: formData.phoneNumber,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    console.log("Server response:", data);
+
+    if (!response.ok) {
+      console.error("Registration failed:", data);
+      toast.error(data.message || "Registration failed");
+      return;
     }
-  };
+
+    toast.success("Account created successfully 🎉");
+    console.log("User registered successfully");
+
+    // Optional: reset form
+    setFormData({
+      firstName: "",
+      lastName: "",
+      userName: "",
+      email: "",
+      phoneNumber: "",
+      password: "",
+    });
+
+  } catch (error) {
+    console.error("Network/server error:", error);
+    toast.error("Server error. Please try again.");
+  }
+};
 
   return (
     <section className="min-h-screen flex items-center justify-center px-4 py-12 md:py-16 bg-gray-50">
@@ -194,18 +245,18 @@ const Page = () => {
               <input
                 type="password"
                 placeholder="Password"
-                name="userPassword"
-                value={formData.userPassword}
+                name="password"
+                value={formData.password}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition  text-black"
               />
-              {errors.userPassword && (
-                <p className="mt-1.5 text-red-600 text-sm">{errors.userPassword}</p>
+              {errors.password && (
+                <p className="mt-1.5 text-red-600 text-sm">{errors.password}</p>
               )}
             </div>
 
             <div>
-              <input
+             {/* <input
                 type="password"
                 placeholder="Confirm Password"
                 name="confirmedPassword"
@@ -213,15 +264,15 @@ const Page = () => {
                 onChange={handleChange}
                 className="w-full px-4   text-black py-3 rounded-lg border border-gray-300 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
-              {errors.confirmedPassword && (
+              {/*{errors.confirmedPassword && (
                 <p className="mt-1.5 text-red-600 text-sm">{errors.confirmedPassword}</p>
-              )}
+              )}*/}
             </div>
           </div>
 
           <button
             type="submit"
-            className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3.5 rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+            className="mt-8 w-full bg-blue-800 hover:bg-blue-700 text-white font-medium py-3.5 rounded-lg transition duration-200 shadow-md hover:shadow-lg"
           >
             Create Account
           </button>
