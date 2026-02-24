@@ -4,7 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 
-//Payload shape when JWT was signed (auth.service: sub = user.id, role = user.role).
+//Payload when JWT was signed (sub = user.id, role = user.role).
 export interface JwtPayload {
   sub: string;
   role: string;

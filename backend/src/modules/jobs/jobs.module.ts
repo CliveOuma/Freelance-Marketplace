@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { JobsController } from './jobs.controller';
-import { BidsController } from './bids.controller';
-import { JobsService } from './jobs.service';
-import { BidsService } from './bids.service';
+import { JobsController } from './controllers/jobs.controller';
+import { JobsService } from './services/jobs.service';
 import { JobsRepository } from './repositories/jobs.repository';
-import { BidsRepository } from './repositories/bids.repository';
+import { BidsService } from '../bids/services/bids.service';
+import { BidsController } from '../bids/controllers/bids.controller';
+import { BidsRepository } from '../bids/repositories/bids.repository';
 
 @Module({
   controllers: [JobsController, BidsController],
   providers: [JobsService, BidsService, JobsRepository, BidsRepository],
-  exports: [JobsService, BidsService],
+  exports: [JobsService, BidsService, JobsRepository, BidsRepository],
 })
 export class JobsModule {}
