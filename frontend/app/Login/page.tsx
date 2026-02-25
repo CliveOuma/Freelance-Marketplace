@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +16,7 @@ const Login = () => {
 
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -60,8 +62,7 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('Login attempt with:', formData);
-
+    
       const res = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: {
@@ -77,7 +78,6 @@ const Login = () => {
       console.log('Response status text:', res.statusText);
 
       if (!res.ok) {
-        // Try to get the error message from backend
         const errorData = await res.text().catch(() => 'No response body');
         console.error('Server error response:', errorData);
         setServerError(errorData || `Login failed (${res.status} ${res.statusText})`);
@@ -87,13 +87,12 @@ const Login = () => {
       // If success
       const data = await res.json();
       console.log('Login successful:', data);
-
-      // Example: save token if your backend returns one
       if (data.token) {
        localStorage.setItem('authToken', data.token);
-      //   // redirect or update app state
+       router.push("/Profile");
+      
       }
-
+      
       // For now just show success
       setServerError('Login successful!');
 
