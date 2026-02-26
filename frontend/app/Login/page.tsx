@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -13,6 +12,8 @@ const Login = () => {
     email: '',
     password: '',
   });
+
+  const router=useRouter();
 
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,8 +84,6 @@ const Login = () => {
         setServerError(errorData || `Login failed (${res.status} ${res.statusText})`);
         return;
       }
-
-      // If success
       const data = await res.json();
       console.log('Login successful:', data);
       if (data.token) {
@@ -95,7 +94,9 @@ const Login = () => {
       
       // For now just show success
       setServerError('Login successful!');
-
+        router.push("/Dashboard");
+      }
+       setServerError('Login successful!')
     } catch (err) {
       console.error('Fetch/login error:', err);
       setServerError('Network error - could not connect to server');
@@ -200,5 +201,4 @@ const Login = () => {
     </section>
   );
 };
-
 export default Login;

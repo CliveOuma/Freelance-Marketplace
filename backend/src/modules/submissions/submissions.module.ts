@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { SubmissionsController } from './submissions.controller';
-import { SubmissionsService } from './submissions.service';
+import { SubmissionsController } from './controllers/submissions.controller';
+import { SubmissionsService } from './services/submissions.service';
 import { SubmissionsRepository } from './repositories/submissions.repository';
 
 @Module({

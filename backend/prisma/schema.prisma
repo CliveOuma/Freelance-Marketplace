@@ -1,4 +1,3 @@
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -7,6 +6,7 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
+
 
 enum Role {
   ADMIN
@@ -20,7 +20,7 @@ enum JobStatus {
   COMPLETED
 }
 
-enum ProposalStatus {
+enum BidStatus {
   PENDING
   ACCEPTED
   REJECTED
@@ -37,6 +37,7 @@ enum SubmissionStatus {
   REJECTED
 }
 
+
 model User {
   id          String   @id @default(uuid())
   firstName   String
@@ -50,17 +51,17 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Relations
   wallet       Wallet?
-  proposals    Proposal[]
   bids         Bid[]
   submissions  Submission[]
-  jobs         Job[]     @relation("EmployerJobs")
+  jobs         Job[]   @relation("EmployerJobs")
+  assignedJobs Job[]   @relation("WriterAssignedJobs")
   reviews      Review[]
 
   @@index([role])
   @@map("users")
 }
-
 model Wallet {
   id        String   @id @default(uuid())
   balance   Float    @default(0)
@@ -99,51 +100,38 @@ model Job {
   employerId  String
   employer    User       @relation("EmployerJobs", fields: [employerId], references: [id])
 
-  proposals   Proposal[]
+  assignedWriterId String?
+  assignedWriter   User? @relation("WriterAssignedJobs", fields: [assignedWriterId], references: [id])
+
   bids        Bid[]
   submissions Submission[]
-  createdAt   DateTime   @default(now())
+  createdAt   DateTime @default(now())
 
   @@index([status])
   @@index([category])
+  @@index([employerId])
+  @@index([assignedWriterId])
   @@map("jobs")
 }
 
-model Proposal {
-  id            String         @id @default(uuid())
-  proposedPrice Float
-  deliveryTime  Int
-  coverLetter   String
-  status        ProposalStatus @default(PENDING)
-
-  jobId   String
-  job     Job  @relation(fields: [jobId], references: [id])
-
-  writerId String
-  writer   User @relation(fields: [writerId], references: [id])
-
-  createdAt DateTime @default(now())
-
-  @@unique([jobId, writerId])
-  @@map("proposals")
-}
-
 model Bid {
-  id        String         @id @default(uuid())
-  bidAmount Float
-  message   String
-  status    ProposalStatus @default(PENDING)
+  id        String     @id @default(uuid())
+  status    BidStatus  @default(PENDING)
 
   userId String
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   jobId  String
   job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  // Ensure one writer can apply only once per job
   @@unique([jobId, userId])
   @@index([userId])
-  @@index([createdAt])
+  @@index([jobId])
+  @@index([status])
   @@map("bids")
 }
 
@@ -155,6 +143,7 @@ model Submission {
 
   jobId   String
   job     Job  @relation(fields: [jobId], references: [id])
+
   writerId String
   writer   User @relation(fields: [writerId], references: [id])
 

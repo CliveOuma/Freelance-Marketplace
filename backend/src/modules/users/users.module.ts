@@ -1,12 +1,14 @@
+// users.module.ts
 import { Module } from '@nestjs/common';
-import { UsersController } from './users.controller';
-import { UsersService } from './users.service';
-import { WriterDashboardRepository } from './repositories/writer-dashboard.repository';
-import { WalletRepository } from './repositories/wallet.repository';
+import { UsersController } from './controllers/users.controller';
+import { UsersService } from './services/users.service';
+import { UsersRepository } from './repositories/users.repository';
+import { ProfileController } from './controllers/profile.controller';
+import { ProfileService } from './services/profile.service';
 
 @Module({
-  controllers: [UsersController],
-  providers: [UsersService, WriterDashboardRepository, WalletRepository],
-  exports: [UsersService],
+  controllers: [UsersController, ProfileController],
+  providers: [UsersService, UsersRepository, ProfileService],
+  exports: [UsersService, ProfileService],
 })
 export class UsersModule {}

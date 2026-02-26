@@ -3,7 +3,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
 export class SubmissionsRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async findById(submissionId: string) {
     return this.prisma.submission.findUnique({
@@ -37,7 +37,6 @@ export class SubmissionsRepository {
       take,
     });
   }
-  //Counts total submissions for a writer Useful for dashboard statistics.
   async countByWriterId(writerId: string) {
     return this.prisma.submission.count({
       where: { writerId },
