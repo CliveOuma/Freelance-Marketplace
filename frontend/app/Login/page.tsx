@@ -1,6 +1,6 @@
 'use client';
-
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +12,8 @@ const Login = () => {
     email: '',
     password: '',
   });
+
+  const router=useRouter();
 
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,20 +85,14 @@ const Login = () => {
         setServerError(errorData || `Login failed (${res.status} ${res.statusText})`);
         return;
       }
-
-      // If success
       const data = await res.json();
       console.log('Login successful:', data);
-
-      // Example: save token if your backend returns one
       if (data.token) {
        localStorage.setItem('authToken', data.token);
-      //   // redirect or update app state
+        router.push("/Dashboard");
       }
-
-      // For now just show success
-      setServerError('Login successful!');
-
+       setServerError('Login successful!')
+     
     } catch (err) {
       console.error('Fetch/login error:', err);
       setServerError('Network error - could not connect to server');
@@ -201,5 +197,4 @@ const Login = () => {
     </section>
   );
 };
-
 export default Login;
