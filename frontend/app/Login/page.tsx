@@ -17,6 +17,7 @@ const Login = () => {
 
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -62,8 +63,7 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('Login attempt with:', formData);
-
+    
       const res = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: {
@@ -79,7 +79,6 @@ const Login = () => {
       console.log('Response status text:', res.statusText);
 
       if (!res.ok) {
-        // Try to get the error message from backend
         const errorData = await res.text().catch(() => 'No response body');
         console.error('Server error response:', errorData);
         setServerError(errorData || `Login failed (${res.status} ${res.statusText})`);
@@ -89,10 +88,15 @@ const Login = () => {
       console.log('Login successful:', data);
       if (data.token) {
        localStorage.setItem('authToken', data.token);
+       router.push("/Profile");
+      
+      }
+      
+      // For now just show success
+      setServerError('Login successful!');
         router.push("/Dashboard");
       }
        setServerError('Login successful!')
-     
     } catch (err) {
       console.error('Fetch/login error:', err);
       setServerError('Network error - could not connect to server');
