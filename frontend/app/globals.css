@@ -24,3 +24,15 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* ensure input text is legible */
+input,
+textarea,
+select {
+  color: black;
+}
+
+/* placeholder should be slightly lighter but still clear */
+input::placeholder,
+textarea::placeholder {
+  color: gray;
+}

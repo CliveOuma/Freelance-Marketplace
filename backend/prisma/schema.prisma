@@ -1,0 +1,168 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+enum Role {
+  ADMIN
+  EMPLOYER
+  WRITER
+}
+
+enum JobStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum WalletTransactionType {
+  credit
+  debit
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+
+model User {
+  id          String   @id @default(uuid())
+  firstName   String
+  lastName    String
+  username    String   @unique
+  email       String   @unique
+  password    String
+  phoneNumber String?
+  role        Role     @default(WRITER)
+  rating      Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  wallet       Wallet?
+  bids         Bid[]
+  submissions  Submission[]
+  jobs         Job[]   @relation("EmployerJobs")
+  assignedJobs Job[]   @relation("WriterAssignedJobs")
+  reviews      Review[]
+
+  @@index([role])
+  @@map("users")
+}
+model Wallet {
+  id        String   @id @default(uuid())
+  balance   Float    @default(0)
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id          String   @id @default(uuid())
+  amount      Float
+  type        WalletTransactionType
+  description String?
+  walletId    String
+  wallet      Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([walletId])
+  @@index([createdAt])
+  @@map("wallet_transactions")
+}
+
+model Job {
+  id          String     @id @default(uuid())
+  title       String
+  description String
+  category    String
+  budget      Float
+  deadline    DateTime
+  status      JobStatus  @default(OPEN)
+
+  employerId  String
+  employer    User       @relation("EmployerJobs", fields: [employerId], references: [id])
+
+  assignedWriterId String?
+  assignedWriter   User? @relation("WriterAssignedJobs", fields: [assignedWriterId], references: [id])
+
+  bids        Bid[]
+  submissions Submission[]
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+  @@index([category])
+  @@index([employerId])
+  @@index([assignedWriterId])
+  @@map("jobs")
+}
+
+model Bid {
+  id        String     @id @default(uuid())
+  status    BidStatus  @default(PENDING)
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  jobId  String
+  job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Ensure one writer can apply only once per job
+  @@unique([jobId, userId])
+  @@index([userId])
+  @@index([jobId])
+  @@index([status])
+  @@map("bids")
+}
+
+model Submission {
+  id        String           @id @default(uuid())
+  filePath  String
+  notes     String?
+  status    SubmissionStatus @default(PENDING)
+
+  jobId   String
+  job     Job  @relation(fields: [jobId], references: [id])
+
+  writerId String
+  writer   User @relation(fields: [writerId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([writerId])
+  @@index([status])
+  @@map("submissions")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+
+  writerId String
+  writer   User @relation(fields: [writerId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("reviews")
+}
