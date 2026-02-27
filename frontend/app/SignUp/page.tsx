@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/dist/client/components/navigation';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -11,7 +12,7 @@ const Page = () => {
     email: '',
     phoneNumber: '',
     password: '',
-  //  confirmedPassword: '',
+    //  confirmedPassword: '',
   });
 
   const [errors, setErrors] = useState({
@@ -21,7 +22,7 @@ const Page = () => {
     email: '',
     phoneNumber: '',
     password: '',
-  
+
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,61 +82,67 @@ const Page = () => {
       isValid = false;
     }
 
-   /* if (!formData.confirmedPassword) {
-      newErrors.confirmedPassword = 'Please confirm password';
-      isValid = false;
-    } else if (formData.confirmedPassword !== formData.userPassword) {
-      newErrors.confirmedPassword = 'Passwords do not match';
-      isValid = false;
-    }*/
+    /* if (!formData.confirmedPassword) {
+       newErrors.confirmedPassword = 'Please confirm password';
+       isValid = false;
+     } else if (formData.confirmedPassword !== formData.userPassword) {
+       newErrors.confirmedPassword = 'Passwords do not match';
+       isValid = false;
+     }*/
 
     setErrors(newErrors);
     return isValid;
   };
 
- const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+  const router = useRouter();
 
-  if (!validateForm()) {
-    toast.error("Please fix the form errors");
-    return;
-  }
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  try {
-    console.log("Submitting data:", formData);
-
-    const response = await fetch(
-      "http://localhost:8080/api/auth/register",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          username: formData.userName, // make sure backend expects "username"
-          email: formData.email,
-          password: formData.password,
-          phoneNumber: formData.phoneNumber,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    console.log("Server response:", data);
-
-    if (!response.ok) {
-      console.error("Registration failed:", data);
-      toast.error(data.message || "Registration failed");
+    if (!validateForm()) {
+      toast.error("Please fix the form errors");
       return;
     }
 
-    toast.success("Account created successfully 🎉");
-    console.log("User registered successfully");
+    try {
+      console.log("Submitting data:", formData);
 
-    // Optional: reset form
+      const response = await fetch(
+        "http://localhost:8080/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            username: formData.userName,
+            email: formData.email,
+            password: formData.password,
+            phoneNumber: formData.phoneNumber,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("Server response:", data);
+
+      if (!response.ok) {
+        console.error("Registration failed:", data);
+        toast.error(data.message || "Registration failed");
+        return;
+      }
+
+      toast.success("Account created successfully");
+      router.push("/Login");
+    } catch (error) {
+      console.error("Error during registration:", error);
+      toast.error("An error occurred. Please try again.");
+    }
+
+    //reset form
     setFormData({
       firstName: "",
       lastName: "",
@@ -144,12 +151,7 @@ const Page = () => {
       phoneNumber: "",
       password: "",
     });
-
-  } catch (error) {
-    console.error("Network/server error:", error);
-    toast.error("Server error. Please try again.");
-  }
-};
+  };
 
   return (
     <section className="min-h-screen flex items-center justify-center px-4 py-12 md:py-16 bg-gray-50">
@@ -256,7 +258,7 @@ const Page = () => {
             </div>
 
             <div>
-             {/* <input
+              {/* <input
                 type="password"
                 placeholder="Confirm Password"
                 name="confirmedPassword"
