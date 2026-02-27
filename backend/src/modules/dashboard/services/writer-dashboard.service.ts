@@ -16,18 +16,17 @@ export class WriterDashboardService {
   
   //status: dormant = no earnings AND no active bids; active otherwise.
   async getSummary(userId: string): Promise<DashboardSummary> {
-    const [wallet_balance, bidsToday, pending_submissions, hasEarnings, hasActiveBids] =
+    const [wallet_balance, bidsToday, pending_submissions, hasEarnings] =
       await Promise.all([
         this.repo.getWalletBalanceByUserId(userId),
         this.repo.getBidsPlacedTodayCount(userId),
         this.repo.getPendingSubmissionsCount(userId),
         this.repo.hasEarnings(userId),
-        this.repo.hasActiveBids(userId),
       ]);
 
     const available_bids = Math.max(0, DAILY_BID_LIMIT - bidsToday);
     const status: 'active' | 'dormant' =
-      hasEarnings || hasActiveBids ? 'active' : 'dormant';
+      hasEarnings? 'active' : 'dormant';
 
     return {
       wallet_balance: Math.round(wallet_balance * 100) / 100,

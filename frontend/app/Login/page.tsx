@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -12,9 +13,7 @@ const Login = () => {
     email: '',
     password: '',
   });
-
-  const router=useRouter();
-
+  const { login } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -26,7 +25,6 @@ const Login = () => {
     if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
-    // Also clear server error when user starts typing again
     setServerError(null);
   };
 
@@ -63,7 +61,7 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-    
+
       const res = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: {
@@ -87,19 +85,13 @@ const Login = () => {
       const data = await res.json();
       console.log('Login successful:', data);
       if (data.token) {
-       localStorage.setItem('authToken', data.token);
-       router.push("/Profile");
-      
-      }
-      
-      // For now just show success
-      setServerError('Login successful!');
+        login(data.token);
         router.push("/Dashboard");
+
       }
-       setServerError('Login successful!')
-    } catch (err) {
-      console.error('Fetch/login error:', err);
-      setServerError('Network error - could not connect to server');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setServerError(err.message || 'An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
     }
@@ -121,7 +113,7 @@ const Login = () => {
           `}
         >
           <h3 className="text-center text-2xl md:text-3xl font-bold text-gray-800 mb-8">
-            Login to Your Account
+            Login
           </h3>
 
           <div className="space-y-5">
@@ -158,11 +150,10 @@ const Login = () => {
 
           {/* Server error or success message */}
           {serverError && (
-            <div className={`mt-4 p-3 rounded text-center text-sm ${
-              serverError.includes('successful') 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
-            }`}>
+            <div className={`mt-4 p-3 rounded text-center text-sm ${serverError.includes('successful')
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
+              }`}>
               {serverError}
             </div>
           )}
@@ -172,7 +163,7 @@ const Login = () => {
             disabled={isSubmitting}
             className={`
               mt-6 w-full 
-              ${isSubmitting ? 'bg-blue-400 cursor-wait' : 'bg-blue-600 hover:bg-blue-800'} 
+              ${isSubmitting ? 'bg-blue-800 cursor-wait' : 'bg-blue-800 hover:bg-blue-700'} 
               text-white font-medium py-3.5 rounded-lg transition duration-200 shadow-md hover:shadow-lg
             `}
           >
@@ -192,7 +183,7 @@ const Login = () => {
                 href="/forgot-password"
                 className="text-blue-600 hover:underline text-sm font-medium"
               >
-                Forgot your password? Reset it
+                Forgot your password {'?'}
               </a>
             </p>
           </div>

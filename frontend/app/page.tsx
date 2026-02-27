@@ -1,7 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
+import { FaBriefcase, FaMoneyBillWave, FaStar, FaUser } from 'react-icons/fa';
+import { HiOutlineSearch } from 'react-icons/hi';
+import { MdAnalytics, MdMessage, MdSecurity } from 'react-icons/md';
 
 export default function LandingPage() {
   const [scrollY, setScrollY] = useState(0);
@@ -16,11 +19,11 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div 
+        <div
           className="absolute top-20 right-20 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl"
           style={{ transform: `translateY(${scrollY * 0.3}px)` }}
         />
-        <div 
+        <div
           className="absolute bottom-40 left-20 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl"
           style={{ transform: `translateY(${-scrollY * 0.2}px)` }}
         />
@@ -39,7 +42,7 @@ export default function LandingPage() {
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight animate-slide-up">
+          <h1 className="text-4xl md:text-2xl lg:text-8xl font-bold mb-6 leading-tight animate-slide-up">
             <span className="bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
               Where Words
             </span>
@@ -51,11 +54,11 @@ export default function LandingPage() {
 
           {/* Subheading */}
           <p className="text-xl md:text-2xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in-delay">
-            Connect talented writers with businesses that need exceptional content. 
+            Connect talented writers with businesses that need exceptional content.
             Post jobs, submit bids, and create amazing work together.
           </p>
 
-       
+
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-8 mt-20 max-w-2xl mx-auto">
@@ -68,9 +71,9 @@ export default function LandingPage() {
 
       {/* How It Works Section */}
       <section id="how-it-works" className="relative z-10 bg-white py-24">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xlmx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-slate-900 mb-4">
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">
               Simple. Fast. Effective.
             </h2>
             <p className="text-xl text-slate-600">
@@ -82,30 +85,31 @@ export default function LandingPage() {
             <ProcessCard
               number="01"
               title="Create Your Profile"
-              description="Sign up as a writer or employer. Set up your profile with your skills, experience, and what you're looking for."
-              icon="👤"
+              description="Sign up as a writer or employer. Set up your profile with your skills and experience."
+              icon={<FaUser className="text-blue-600 text-2xl" />}
             />
             <ProcessCard
               number="02"
               title="Browse & Bid"
-              description="Writers browse available jobs and submit competitive bids. Employers review proposals and select the best fit."
-              icon="💼"
+              description="Writers browse available jobs and submit bids. Employers review proposals and select the best fit."
+              icon={<FaBriefcase className="text-blue-600 text-2xl" />}
             />
             <ProcessCard
               number="03"
               title="Work & Get Paid"
-              description="Collaborate seamlessly, deliver great work, and get paid securely through our platform."
-              icon="💰"
+              description="Collaborate seamlessly, deliver great work, and get paid securely through the platform."
+              icon={<FaMoneyBillWave className="text-blue-600 text-2xl" />}
             />
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="relative z-10 py-24">
+      {/* FEATURES */}
+      <section className="relative z-10 py-24">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-slate-900 mb-4">
+
+          <div className="text-center md:text-2xl mb-16">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">
               Everything You Need
             </h2>
             <p className="text-xl text-slate-600">
@@ -115,51 +119,50 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <FeatureCard
-              icon="🔍"
+              icon={<HiOutlineSearch className="text-blue-600 text-3xl" />}
               title="Smart Job Matching"
               description="AI-powered recommendations match writers with jobs that fit their expertise."
             />
             <FeatureCard
-              icon="💬"
+              icon={<MdMessage className="text-blue-600 text-3xl" />}
               title="Real-time Messaging"
               description="Communicate directly with writers or employers throughout the project."
             />
             <FeatureCard
-              icon="📊"
+              icon={<MdAnalytics className="text-blue-600 text-2xl" />}
               title="Track Progress"
               description="Monitor job status, deadlines, and milestones in one organized dashboard."
             />
             <FeatureCard
-              icon="⭐"
+              icon={<FaStar className="text-blue-600 text-2xl" />}
               title="Rating System"
               description="Build your reputation with reviews and ratings from completed projects."
             />
             <FeatureCard
-              icon="🔒"
+              icon={<MdSecurity className="text-blue-600 text-2xl" />}
               title="Secure Payments"
               description="Escrow protection ensures safe transactions for both parties."
             />
             <FeatureCard
-              icon="📈"
+              icon={<MdAnalytics className="text-blue-600 text-3xl" />}
               title="Analytics Dashboard"
               description="Track earnings, job history, and performance metrics over time."
             />
           </div>
         </div>
       </section>
-
       {/* CTA Section */}
       <section className="relative z-10 py-24 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Ready to Get Started?
           </h2>
           <p className="text-xl text-blue-100 mb-12">
             Join thousands of writers and employers creating amazing content together
           </p>
-          <Link 
+          <Link
             href="/SignUp"
-            className="inline-block px-12 py-5 bg-white text-blue-600 rounded-xl font-bold text-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+            className="inline-block px-8 py-4 bg-white text-blue-600 rounded-xl font-bold text-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
           >
             Create Free Account
           </Link>
@@ -168,17 +171,12 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="relative z-10 bg-slate-900 text-slate-300 py-16">
-        
 
-          
-          
 
-        
+        <div className="border-t border-slate-800 pt-8 text-center text-sm text-slate-500">
+          <p>© 2025 WritersHub. All rights reserved.</p>
+        </div>
 
-          <div className="border-t border-slate-800 pt-8 text-center text-sm text-slate-500">
-            <p>© 2025 WriteMarket. All rights reserved.</p>
-          </div>
-        
       </footer>
 
       <style jsx global>{`
@@ -237,7 +235,7 @@ function StatCard({ number, label }: { number: string; label: string }) {
 }
 
 // Process Card Component
-function ProcessCard({ number, title, description, icon }: { number: string; title: string; description: string; icon: string }) {
+function ProcessCard({ number, title, description, icon }: { number: string; title: string; description: string; icon: ReactNode }) {
   return (
     <div className="relative group">
       <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur-xl opacity-0 group-hover:opacity-20 transition-opacity duration-500" />
@@ -252,7 +250,7 @@ function ProcessCard({ number, title, description, icon }: { number: string; tit
 }
 
 // Feature Card Component
-function FeatureCard({ icon, title, description }: { icon: string; title: string; description: string }) {
+function FeatureCard({ icon, title, description }: { icon: ReactNode; title: string; description: string }) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-6 hover:border-blue-300 hover:shadow-lg transition-all duration-300 group">
       <div className="text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-300">

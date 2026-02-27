@@ -1,15 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Sidebar from '@/app/components/Sidebar';
+import { FaSpinner } from 'react-icons/fa';
+import toast from 'react-hot-toast';
+
 interface Job {
   id: string | number;
   title: string;
-  dueDate: string;
-  context: string;
-  pages: number;
-  amount: number;
+  description: string;
+  category: string;
+  budget: number;
+  deadline: number;
+  status: string;
 }
 
 const JOBS_API_URL = 'http://localhost:8080/api/jobs';
@@ -18,33 +22,25 @@ const AvailableJobs = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [biddingJobId, setBiddingJobId] = useState<string | number | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 9;
 
-  const pathname = usePathname();
-
-  const navItems = [
-    { label: 'Dashboard', href: '/Dashboard', icon: '🏠' },
-    { label: 'Profile', href: '/Profile', icon: '👤' },
-    { label: 'Jobs', href: '/Jobs', icon: '💼' },
-  ];
+  const router = useRouter();
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
 
     const fetchJobs = async () => {
       if (!token) {
-        window.location.href = '/login';
+        router.push('/Login');
         return;
       }
-
       try {
         setLoading(true);
         setError(null);
-
         const res = await fetch(JOBS_API_URL, {
           method: 'GET',
           headers: {
@@ -56,7 +52,7 @@ const AvailableJobs = () => {
         if (!res.ok) {
           if (res.status === 401) {
             localStorage.removeItem('authToken');
-            window.location.href = '/login?sessionExpired=true';
+            window.location.href = '/Login?sessionExpired=true';
             return;
           }
           throw new Error(`Failed to fetch jobs: ${res.status}`);
@@ -75,44 +71,36 @@ const AvailableJobs = () => {
     fetchJobs();
   }, []);
 
-  // Fetch single job details when "View Details" is clicked
-  const handleViewDetails = async (jobId: string | number) => {
+  // 1-click bid — no form, no navigation, just toast
+  const handlePlaceBid = async (job: Job) => {
     const token = localStorage.getItem('authToken');
-
     if (!token) {
-      alert('Please log in to view job details.');
+      router.push('/Login');
       return;
     }
 
     try {
-      const url = `http://localhost:8080/api/jobs/${jobId}?jobId=${jobId}`;
-      console.log(`Fetching job details from: ${url}`);
-
-      const res = await fetch(url, {
-        method: 'GET',
+      setBiddingJobId(job.id);
+      const res = await fetch(`http://localhost:8080/api/jobs/${job.id}/bid`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        body: JSON.stringify({ jobId: job.id }),
       });
 
       if (!res.ok) {
-        const errText = await res.text().catch(() => 'Unknown error');
-        throw new Error(`Failed to fetch job details: ${res.status} - ${errText}`);
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to place bid: ${res.status}`);
       }
 
-      const jobDetails = await res.json();
-      console.log('Job details fetched:', jobDetails);
-
-      // You can now do something with the data, e.g.:
-      // - Open a modal
-      // - Navigate to a details page: router.push(`/jobs/${jobId}`)
-      // - Store in state
-      alert(`Job details loaded for "${jobDetails.title || 'Job'}"\nCheck console for full response.`);
-
+      toast.success('Bid placed successfully!');
     } catch (err: any) {
-      console.error('View details error:', err);
-      alert(`Error loading job details: ${err.message}`);
+      console.error('Bid error:', err);
+      toast.error(err.message || 'Failed to place bid. Please try again.');
+    } finally {
+      setBiddingJobId(null);
     }
   };
 
@@ -121,14 +109,12 @@ const AvailableJobs = () => {
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
   const currentJobs = jobs.slice(indexOfFirstJob, indexOfLastJob);
   const totalPages = Math.ceil(jobs.length / jobsPerPage);
-
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
-  const closeMenu = () => setIsMenuOpen(false);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-600 text-lg">Loading available jobs...</p>
+        <FaSpinner className="animate-spin text-blue-600 text-3xl" />
       </div>
     );
   }
@@ -143,131 +129,20 @@ const AvailableJobs = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Mobile Header with Hamburger */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between lg:hidden">
-        <button
-          onClick={() => setIsMenuOpen(true)}
-          className="text-2xl text-gray-700 hover:text-gray-900 focus:outline-none"
-          aria-label="Open menu"
-        >
-          ☰
-        </button>
+      <h1 className="text-3xl md:text-4xl font-bold mt-2 lg:ml-64 text-gray-900 mb-3 px-4">
+        Available Jobs
+      </h1>
+      <Sidebar />
 
-        <h1 className="text-xl font-semibold text-gray-800">Available Jobs</h1>
-
-        <div className="w-8" />
-      </header>
-
-      {/* Slide-in Navigation Menu (mobile only) */}
-      <div
-        className={`
-          fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out
-          ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:hidden
-        `}
-      >
-        <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-blue-700">Arcade Writers</h2>
-            <button
-              onClick={closeMenu}
-              className="text-2xl text-gray-600 hover:text-gray-900 focus:outline-none"
-              aria-label="Close menu"
-            >
-              ✕
-            </button>
-          </div>
-
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={closeMenu}
-                className={`
-                  flex items-center gap-3 px-4 py-3 rounded-lg text-gray-800 hover:bg-gray-100 transition-colors
-                  ${pathname === item.href ? 'bg-blue-50 text-blue-700 font-semibold' : ''}
-                `}
-              >
-                <span className="text-xl">{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="p-6 border-t border-gray-200">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
-              <span className="text-xl">🚪</span>
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Overlay when menu is open on mobile */}
-      {isMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={closeMenu}
-        />
-      )}
-
-      {/* Desktop Sidebar */}
-      <aside
-        className="
-          hidden lg:block lg:w-64 lg:flex-shrink-0 lg:border-r lg:border-gray-200 lg:bg-white lg:shadow
-          lg:fixed lg:inset-y-0 lg:left-0 lg:z-30
-        "
-      >
-        <div className="h-full flex flex-col">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-blue-700">Arcade Writers</h2>
-          </div>
-
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`
-                  flex items-center gap-3 px-4 py-3 rounded-lg text-gray-800 hover:bg-gray-100 transition-colors
-                  ${pathname === item.href ? 'bg-blue-50 text-blue-700 font-semibold' : ''}
-                `}
-              >
-                <span className="text-xl">{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="p-6 border-t border-gray-200">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
-              <span className="text-xl">🚪</span>
-              Logout
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col lg:ml-64">
-        <header className="hidden lg:block bg-white border-b border-gray-200 px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-800">Available Jobs</h1>
-        </header>
-
-        <main className="flex-1 p-4 md:p-8">
+        <main className="flex-1 p-4 md:p-6 lg:p-5">
           <div className="max-w-7xl mx-auto">
-            <h1 className="lg:hidden text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">
-              Available Jobs
-            </h1>
-
             {jobs.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-600 text-lg">No jobs available at the moment. Check back soon!</p>
               </div>
             ) : (
               <>
-                {/* Job Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {currentJobs.map((job) => (
                     <div
@@ -278,43 +153,38 @@ const AvailableJobs = () => {
                         <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">
                           {job.title}
                         </h3>
-
                         <div className="space-y-2 text-sm text-gray-700 mb-4">
-                          <p>
-                            <span className="font-medium">Due Date:</span> {job.dueDate}
+                          <p><span className="font-medium">Description</span> {job.description}</p>
+                          <p className="line-clamp-3">
+                            <span className="font-medium">Category:</span> {job.category}
                           </p>
                           <p className="line-clamp-3">
-                            <span className="font-medium">Context:</span> {job.context}
+                            <span className="font-medium">Budget:</span> ksh {job.budget}
                           </p>
-                          <p>
-                            <span className="font-medium">Pages:</span> {job.pages} pages
-                          </p>
-                          <p className="text-lg font-bold text-green-700 mt-3">
-                            Total Amount: KSH{' '}
-                            {job.amount.toLocaleString('en-KE', {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
+                          <p className="line-clamp-3">
+                            <span className="font-medium">Deadline:</span> {job.deadline}
                           </p>
                         </div>
+                        <p className=" flex w-full bg-green-300 text-gray-800 rounded-lg text-sm py-2 px-2">
+                            <span className="font-medium text-gray-900">Status:</span> {job.status}
+                          </p>
                       </div>
 
-                      <div className="px-6 pb-6 flex gap-3 mt-auto">
+                      <div className="px-6 pb-6 flex text-center gap-3 mt-auto">
                         <button
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-300"
-                          onClick={() => {
-                            alert(`Bidding on job: ${job.title}`);
-                            // Replace with real bid logic (POST request) later
-                          }}
+                          onClick={() => handlePlaceBid(job)}
+                          disabled={biddingJobId === job.id}
+                          className={`flex-1 font-medium py-2.5 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-300 flex items-center justify-center gap-2 ${
+                            biddingJobId === job.id
+                              ? 'bg-gray-400 text-white cursor-not-allowed'
+                              : 'bg-blue-600 hover:bg-blue-700 text-white'
+                          }`}
                         >
-                          Place Bid
-                        </button>
-
-                        <button
-                          onClick={() => handleViewDetails(job.id)}
-                          className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 rounded-lg transition"
-                        >
-                          View Details
+                          {biddingJobId === job.id ? (
+                            <><FaSpinner className="animate-spin" /> Placing...</>
+                          ) : (
+                            'Place Bid'
+                          )}
                         </button>
                       </div>
                     </div>
@@ -331,7 +201,6 @@ const AvailableJobs = () => {
                     >
                       Previous
                     </button>
-
                     {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
                       const page = currentPage - 3 + i;
                       if (page < 1 || page > totalPages) return null;
@@ -349,7 +218,6 @@ const AvailableJobs = () => {
                         </button>
                       );
                     })}
-
                     <button
                       onClick={() => paginate(currentPage + 1)}
                       disabled={currentPage === totalPages}

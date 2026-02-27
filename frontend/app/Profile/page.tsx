@@ -1,21 +1,21 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import Sidebar from '@/app/components/Sidebar';
+import { FaBars, FaSpinner } from 'react-icons/fa6';
 
 interface UserProfile {
   firstName: string;
   lastName: string;
   username: string;
-  email: string;
   phoneNumber: string;
   updatedAt: string;
   joinedAt: string;
+  createdAt?: string;
   totalEarnings: number;
   submissions: number;
   rating: number;
-  // Add role/status if present in your real response
   status?: string;
 }
 
@@ -39,28 +39,22 @@ const Profile = () => {
   });
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const pathname = usePathname();
   const router = useRouter();
 
-  const navItems = [
-    { label: 'Dashboard', href: '/Dashboard', icon: '🏠' },
-    { label: 'Profile', href: '/Profile', icon: '👤' },
-    { label: 'Jobs', href: '/Jobs', icon: '💼' },
-  ];
-
   useEffect(() => {
-    const fetchProfile = async () => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
 
+    const fetchProfile = async () => {
       if (!token) {
-        router.replace('/login');
+        router.push('/Login');
         return;
       }
 
       try {
         setIsLoading(true);
+        setSubmitMessage(null);
 
-        const res = await fetch('http://localhost:8080/api/profile', {
+        const res = await fetch('http://localhost:8080/api/user/profile', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -182,7 +176,7 @@ const Profile = () => {
     const token = localStorage.getItem('authToken');
 
     try {
-      const res = await fetch('http://localhost:8080/api/profile', {
+      const res = await fetch('http://localhost:8080/api/user/profile', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -219,7 +213,7 @@ const Profile = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-600 text-lg">Loading profile...</p>
+        <p className="text-gray-600 text-lg"><FaSpinner className="animate-spin" /></p>
       </div>
     );
   }
@@ -241,7 +235,7 @@ const Profile = () => {
           className="text-2xl text-gray-700 hover:text-gray-900 focus:outline-none"
           aria-label="Open menu"
         >
-          ☰
+          <FaBars className="text-gray-700" />
         </button>
 
         <h1 className="text-xl font-semibold text-gray-800">Profile</h1>
@@ -249,51 +243,7 @@ const Profile = () => {
         <div className="w-8" />
       </header>
 
-      {/* Slide-in Navigation Menu (mobile) */}
-      <div
-        className={`
-          fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out
-          ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:hidden
-        `}
-      >
-        <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-blue-700">Arcade Writers</h2>
-            <button
-              onClick={closeMenu}
-              className="text-2xl text-gray-600 hover:text-gray-900 focus:outline-none"
-              aria-label="Close menu"
-            >
-              ✕
-            </button>
-          </div>
 
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={closeMenu}
-                className={`
-                  flex items-center gap-3 px-4 py-3 rounded-lg text-gray-800 hover:bg-gray-100 transition-colors
-                  ${pathname === item.href ? 'bg-blue-50 text-blue-700 font-semibold' : ''}
-                `}
-              >
-                <span className="text-xl">{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="p-6 border-t border-gray-200">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
-              <span className="text-xl">🚪</span>
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Overlay when menu is open on mobile */}
       {isMenuOpen && (
@@ -304,48 +254,10 @@ const Profile = () => {
       )}
 
       {/* Desktop Sidebar */}
-      <aside
-        className="
-          hidden lg:block lg:w-64 lg:flex-shrink-0 lg:border-r lg:border-gray-200 lg:bg-white lg:shadow
-          lg:fixed lg:inset-y-0 lg:left-0 lg:z-30
-        "
-      >
-        <div className="h-full flex flex-col">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-blue-700">Arcade Writers</h2>
-          </div>
-
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`
-                  flex items-center gap-3 px-4 py-3 rounded-lg text-gray-800 hover:bg-gray-100 transition-colors
-                  ${pathname === item.href ? 'bg-blue-50 text-blue-700 font-semibold' : ''}
-                `}
-              >
-                <span className="text-xl">{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="p-6 border-t border-gray-200">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
-              <span className="text-xl">🚪</span>
-              Logout
-            </button>
-          </div>
-        </div>
-      </aside>
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:ml-64">
-        <header className="hidden lg:block bg-white border-b border-gray-200 px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-800">Your Profile</h1>
-        </header>
-
         <main className="flex-1 p-4 md:p-8">
           <div className="max-w-5xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -361,7 +273,6 @@ const Profile = () => {
                       { label: 'First Name', name: 'firstName', value: formData.firstName, editable: true },
                       { label: 'Last Name', name: 'lastName', value: formData.lastName, editable: true },
                       { label: 'Username', name: 'username', value: formData.username, editable: true },
-                      { label: 'Email Address', name: 'email', value: profile.email, editable: false },
                       { label: 'Phone Number', name: 'phoneNumber', value: formData.phoneNumber, editable: true },
                     ].map((field) => (
                       <div key={field.name}>
@@ -378,8 +289,8 @@ const Profile = () => {
                           placeholder={`Enter your ${field.label.toLowerCase()}`}
                           className={`
                             w-full px-4 py-3 rounded-lg border 
-                            ${field.editable 
-                              ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-900 placeholder:text-gray-400' 
+                            ${field.editable
+                              ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-900 placeholder:text-gray-400'
                               : 'border-gray-200 bg-gray-50 text-gray-700 cursor-not-allowed'}
                             outline-none transition
                           `}
@@ -393,9 +304,8 @@ const Profile = () => {
 
                   {submitMessage && (
                     <div
-                      className={`mt-6 p-4 rounded-lg text-center ${
-                        submitMessage.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}
+                      className={`mt-6 p-4 rounded-lg text-center ${submitMessage.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}
                     >
                       {submitMessage.text}
                     </div>
@@ -417,7 +327,7 @@ const Profile = () => {
 
               {/* Right: Summary Card */}
               <div className="md:mt-14">
-                <div className="bg-green-50 rounded-xl shadow-xl shadow-gray-300/70 px-8 py-10 border border-green-200">
+                <div className="bg-orange-50 rounded-xl shadow-xl shadow-gray-300/70 px-8 py-10 border border-green-200">
                   <h3 className="text-xl font-bold text-gray-800 mb-6">Your Account Summary</h3>
                   <div className="space-y-4 text-gray-900">
                     <div className="flex justify-between">
@@ -426,7 +336,12 @@ const Profile = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium text-gray-700">Joined:</span>
-                      <span>{profile.joinedAt ? new Date(profile.joinedAt).toLocaleDateString() : '—'}</span>
+                      <span>
+                        {(profile.createdAt || profile.joinedAt)
+                          ? new Date(profile.createdAt || profile.joinedAt).toLocaleDateString('en-KE', {
+                          })
+                          : '—'}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium text-gray-700">Total Earnings:</span>
